@@ -4,6 +4,36 @@ Projeto de e-commerce em arquitetura **micro front-end**: listagem de produtos, 
 
 ---
 
+## Capturas de tela
+
+Ambiente local (`http://localhost:3000`) com host e remotes em execução.
+
+### Listagem de produtos (ProductList)
+
+Header (remote `header`), grid de cards (remote `cards`) e footer (remote `footer`) integrados pelo host.
+
+<p align="center">
+  <img
+    src="./docs/screenshots/product-list.png"
+    alt="Tela de listagem de produtos com header verde VR, cards de produtos e botões Comprar"
+    width="720"
+  />
+</p>
+
+### Carrinho de compras
+
+Painel lateral do carrinho no host, com itens adicionados e contador sincronizado no header via `@repo/cart-store`.
+
+<p align="center">
+  <img
+    src="./docs/screenshots/shopping-cart.png"
+    alt="Tela com carrinho de compras aberto exibindo itens, total e ações Concluir compras e Cancelar"
+    width="720"
+  />
+</p>
+
+---
+
 ## Arquitetura
 
 O monorepo usa **Turborepo** para orquestrar apps e pacotes. A interface é dividida em um **host** (shell) e três **remotes** via **Webpack 5 Module Federation**:

@@ -22,10 +22,19 @@ export const useCartStore = create((set) => ({
     });
   },
 
+  removeItem: (id) =>
+    set((state) => ({
+      items: state.items.filter((item) => item.id !== id),
+    })),
+
   openCart: () => set({ isOpen: true }),
   closeCart: () => set({ isOpen: false }),
 }));
 
 export function getTotalQuantity(items) {
   return items.reduce((sum, item) => sum + item.quantity, 0);
+}
+
+export function getCartTotalPrice(items) {
+  return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 }

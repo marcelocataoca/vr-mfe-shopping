@@ -60,4 +60,15 @@ describe('useCartStore', () => {
 
     expect(useCartStore.getState().isOpen).toBe(false);
   });
+
+  it('removeItem remove a linha pelo id', () => {
+    useCartStore.getState().addItem(mockProduct);
+    useCartStore.getState().addItem({ ...mockProduct, id: 11, title: 'Teclado' });
+
+    useCartStore.getState().removeItem(mockProduct.id);
+
+    const { items } = useCartStore.getState();
+    expect(items).toHaveLength(1);
+    expect(items[0].id).toBe(11);
+  });
 });

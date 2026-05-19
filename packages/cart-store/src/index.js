@@ -1,2 +1,2 @@
-export { useCartStore, getTotalQuantity } from './cartStore';
+export { useCartStore, getTotalQuantity, getCartTotalPrice } from './cartStore';
 export { toCartItem } from './toCartItem';
