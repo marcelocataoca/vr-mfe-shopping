@@ -1,159 +1,203 @@
-# Turborepo starter
+# VR MFE Shopping
 
-This Turborepo starter is maintained by the Turborepo core team.
+Projeto de e-commerce em arquitetura **micro front-end**: listagem de produtos, carrinho de compras e estado compartilhado entre host e remotes.
 
-## Using this example
+---
 
-Run the following command:
+## Arquitetura
 
-```sh
-npx create-turbo@latest
+O monorepo usa **Turborepo** para orquestrar apps e pacotes. A interface é dividida em um **host** (shell) e três **remotes** via **Webpack 5 Module Federation**:
+
+| App | Papel | Porta (dev) | Expõe / Consome |
+|-----|--------|-------------|------------------|
+| `apps/host` | Host — monta a página | 3000 | Consome header, cards e footer |
+| `apps/header` | Remote | 3001 | `./Header` |
+| `apps/cards` | Remote | 3002 | `./Cards` |
+| `apps/footer` | Remote | 3003 | `./Footer` |
+
+O pacote `packages/cart-store` centraliza o estado do carrinho com **Zustand** e é consumido pelo host, header e cards (singleton compartilhado pelo Module Federation).
+
+```
+my-turborepo/
+├── apps/
+│   ├── host/      # shell + modal do carrinho
+│   ├── header/    # topo (logo, busca, ícone do carrinho)
+│   ├── cards/     # listagem de produtos
+│   └── footer/
+└── packages/
+    └── cart-store/   # store Zustand compartilhada
 ```
 
-## What's inside?
+> Os apps `web` e `docs` (Next.js) são resquícios do template Turborepo e **não fazem parte** do fluxo micro front-end deste teste.
 
-This Turborepo includes the following packages/apps:
+---
 
-### Apps and Packages
+## Requisitos
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+| Ferramenta | Versão |
+|------------|--------|
+| **Node.js** | `>= 18` (recomendado: 18 LTS ou 20 LTS) |
+| **npm** | `>= 9` (o projeto declara `npm@11.3.0` como gerenciador) |
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+Verifique com:
 
-### Utilities
+```bash
+node -v
+npm -v
+```
 
-This Turborepo has some additional tools already setup for you:
+---
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+## Tecnologias
 
-### Build
+- **React 18** — UI dos micro front-ends
+- **Turborepo** — monorepo, scripts paralelos e cache de build
+- **Webpack 5 + Module Federation** — host e remotes independentes
+- **Tailwind CSS 3** — estilização utilitária
+- **Zustand** — estado global leve do carrinho (`@repo/cart-store`)
+- **Jest + React Testing Library** — testes unitários e de integração
+- **ESLint** e **Prettier** — lint e formatação
 
-To build all apps and packages, run the following command:
+---
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+## Como rodar o projeto
 
-```sh
+Todos os comandos abaixo devem ser executados **dentro da pasta `my-turborepo`** (raiz do monorepo com `package.json` e workspaces).
+
+### 1. Instalar dependências
+
+```bash
 cd my-turborepo
-turbo build
+npm install
 ```
 
-Without global `turbo`, use your package manager:
+### 2. Subir o ambiente de desenvolvimento
 
-```sh
-cd my-turborepo
-npx turbo build
-npm dlx turbo build
-npm exec turbo build
+É necessário subir **host e os três remotes ao mesmo tempo** (Module Federation em dev).
+
+```bash
+npm start
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+Equivalente: `npm run dev`.
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+O Turbo sobe em paralelo:
 
-```sh
-turbo build --filter=docs
+- Host → http://localhost:3000
+- Header → http://localhost:3001
+- Cards → http://localhost:3002
+- Footer → http://localhost:3003
+
+**Acesse apenas o host:** http://localhost:3000
+
+Os remotes são carregados dinamicamente pelo host; abrir as portas 3001–3003 isoladamente serve só para debug do remote.
+
+### Rodar a partir da pasta pai do repositório
+
+Se o clone tiver a estrutura `vr-mfe-shopping/my-turborepo/`:
+
+```bash
+cd vr-mfe-shopping
+npm install          # na raiz, se houver dependências
+npm start            # delega para my-turborepo
 ```
 
-Without global `turbo`:
+---
 
-```sh
-npx turbo build --filter=docs
-npm exec turbo build --filter=docs
-npm exec turbo build --filter=docs
+## Scripts disponíveis
+
+Executar na raiz de `my-turborepo`:
+
+| Script | Comando | Descrição |
+|--------|---------|-----------|
+| `start` / `dev` | `npm start` | Sobe host + header + cards + footer em paralelo |
+| `build` | `npm run build` | Build de produção (Turbo em todos os pacotes com script `build`) |
+| `lint` | `npm run lint` | ESLint via Turbo |
+| `format` | `npm run format` | Prettier em `ts`, `tsx` e `md` |
+| `check-types` | `npm run check-types` | Checagem de tipos (apps TypeScript do template) |
+
+Cada app MF (`host`, `header`, `cards`, `footer`) também expõe localmente:
+
+| Script | Comando (dentro do app) | Descrição |
+|--------|-------------------------|-----------|
+| `start` | `npm start` | `webpack serve` em modo development |
+| `build` | `npm run build` | `webpack --mode production` → pasta `dist/` |
+| `test` | `npm test` | Jest |
+
+Build apenas dos micro front-ends (opcional, mais rápido):
+
+```bash
+npx turbo run build --filter=mf-host --filter=header --filter=cards --filter=footer
 ```
 
-### Develop
+---
 
-To develop all apps and packages, run the following command:
+## Testes
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+Testes com **Jest** e **React Testing Library** em:
 
-```sh
-cd my-turborepo
-turbo dev
+- `apps/host` — componentes e fluxo do carrinho
+- `apps/header` e `apps/cards`
+- `packages/cart-store` — store e helpers
+
+Por app:
+
+```bash
+cd apps/host && npm test
+cd apps/header && npm test
+cd apps/cards && npm test
+cd packages/cart-store && npm test
 ```
 
-Without global `turbo`, use your package manager:
+Ou, a partir da raiz do monorepo (pacotes com testes implementados):
 
-```sh
-cd my-turborepo
-npx turbo dev
-npm exec turbo dev
-npm exec turbo dev
+```bash
+npx turbo run test --filter=mf-host --filter=header --filter=cards --filter=@repo/cart-store
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+> O app `footer` ainda não possui arquivos de teste; incluí-lo no `turbo run test` sem filtro pode falhar.
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+---
 
-```sh
-turbo dev --filter=web
+## Build
+
+Gera artefatos estáticos em `dist/` em cada app MF:
+
+```bash
+npm run build
 ```
 
-Without global `turbo`:
+Saída principal:
 
-```sh
-npx turbo dev --filter=web
-npm exec turbo dev --filter=web
-npm exec turbo dev --filter=web
-```
+- `apps/host/dist/` — `index.html` + bundles do host
+- `apps/header/dist/remoteEntry.js` (+ chunks)
+- `apps/cards/dist/remoteEntry.js`
+- `apps/footer/dist/remoteEntry.js`
 
-### Remote Caching
+**Desenvolvimento:** o host aponta os remotes para `http://localhost:3001–3003` (adequado para `npm start`).
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+**Produção:** para deploy real, é necessário configurar as URLs dos `remoteEntry.js` no `webpack.config.js` do host (variáveis de ambiente ou URLs do CDN/servidor). O build atual gera os bundles corretamente, mas o host em produção ainda referencia localhost até esse ajuste.
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+Fluxo mínimo de deploy:
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+1. Build dos quatro apps MF.
+2. Publicar cada `dist/` em um servidor estático (ou paths no mesmo domínio).
+3. Ajustar `remotes` no host para as URLs finais.
+4. Garantir CORS se host e remotes estiverem em origens diferentes.
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+---
 
-```sh
-cd my-turborepo
-turbo login
-```
+## Melhorias futuras
 
-Without global `turbo`, use your package manager:
+- URLs de remotes configuráveis por ambiente (dev / staging / produção)
+- `MiniCssExtractPlugin` para CSS em produção (hoje via `style-loader`)
+- Testes no `footer` e script `test` unificado na raiz do monorepo
+- Pipeline CI com `build`, `test` e `lint` filtrados só nos pacotes MF
+- Remoção ou isolamento dos apps `web` e `docs` do template Turborepo
 
-```sh
-cd my-turborepo
-npx turbo login
-npm exec turbo login
-npm exec turbo login
-```
+---
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+## Referências
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-npm exec turbo link
-npm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+- [Turborepo — Running tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
+- [Webpack Module Federation](https://webpack.js.org/concepts/module-federation/)
