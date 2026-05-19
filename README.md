@@ -174,22 +174,30 @@ Saída principal:
 - `apps/cards/dist/remoteEntry.js`
 - `apps/footer/dist/remoteEntry.js`
 
-**Desenvolvimento:** o host aponta os remotes para `http://localhost:3001–3003` (adequado para `npm start`).
+**Desenvolvimento:** `npm start` usa localhost (`3001–3003`) via `apps/host/mf-remotes.config.js`.
 
-**Produção:** para deploy real, é necessário configurar as URLs dos `remoteEntry.js` no `webpack.config.js` do host (variáveis de ambiente ou URLs do CDN/servidor). O build atual gera os bundles corretamente, mas o host em produção ainda referencia localhost até esse ajuste.
+**Staging / produção:** edite os placeholders em `mf-remotes.config.js` ou defina variáveis no deploy:
+
+| Variável | Uso |
+|----------|-----|
+| `MFE_ENV` | `development` \| `staging` \| `production` (padrão: dev no start, prod no build) |
+| `MFE_REMOTE_HEADER_URL` | URL base do remote header (sem `/remoteEntry.js`) |
+| `MFE_REMOTE_CARDS_URL` | URL base do remote cards |
+| `MFE_REMOTE_FOOTER_URL` | URL base do remote footer |
+
+Exemplo: `npm run build:staging` no app host (`MFE_ENV=staging`). Ver `apps/host/.env.example`.
 
 Fluxo mínimo de deploy:
 
 1. Build dos quatro apps MF.
 2. Publicar cada `dist/` em um servidor estático (ou paths no mesmo domínio).
-3. Ajustar `remotes` no host para as URLs finais.
+3. Ajustar URLs em `mf-remotes.config.js` ou via env vars acima.
 4. Garantir CORS se host e remotes estiverem em origens diferentes.
 
 ---
 
 ## Melhorias futuras
 
-- URLs de remotes configuráveis por ambiente (dev / staging / produção)
 - `MiniCssExtractPlugin` para CSS em produção (hoje via `style-loader`)
 - Testes no `footer` e script `test` unificado na raiz do monorepo
 - Pipeline CI com `build`, `test` e `lint` filtrados só nos pacotes MF

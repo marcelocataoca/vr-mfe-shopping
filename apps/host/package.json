@@ -5,6 +5,7 @@
   "scripts": {
     "start": "webpack serve --mode development",
     "build": "webpack --mode production",
+    "build:staging": "MFE_ENV=staging webpack --mode production",
     "test": "jest"
   },
   "dependencies": {

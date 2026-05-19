@@ -2,16 +2,18 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { ModuleFederationPlugin } = require('webpack').container;
 const path = require('path');
 const { getShared } = require('../mf-shared-deps');
+const { getRemotes } = require('./mf-remotes.config');
 
 const PORT = 3000;
 
 module.exports = (env, argv) => {
-  const isDev = argv.mode === 'development';
+  const mode = argv.mode || 'development';
+  const isDev = mode === 'development';
 
   return {
   entry: './src/index.js',
 
-  mode: argv.mode || 'development',
+  mode,
 
   devServer: {
     port: PORT,
@@ -56,14 +58,7 @@ module.exports = (env, argv) => {
   plugins: [
     new ModuleFederationPlugin({
       name: 'host',
-      // Em producao precisa apontar para URLs reais dos remotes
-      remotes: {
-        header: 'header@http://localhost:3001/remoteEntry.js',      
-
-        cards: 'cards@http://localhost:3002/remoteEntry.js',
-
-        footer: 'footer@http://localhost:3003/remoteEntry.js',
-      },
+      remotes: getRemotes(mode),
 
       shared: getShared({ eager: true }),
     }),
